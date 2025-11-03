@@ -1,0 +1,73 @@
+#
+# PHOENIX FUTURE BLUEPRINT: COMPLIANCE CLUSTER FIREWALL POLICY
+# -----------------------------------------------------------
+# Cluster: ComplianceCluster-IDC01
+# Version: 2025.10.31
+# Status: Enforced (Zero Trust)
+#
+
+firewall_policy {
+    cluster: "ComplianceCluster-IDC01";
+    enforcement_mode: "Zero Trust";
+    integration_reference: "/infrastructure/security/compliance/PhoenixFutureBlueprint_StrategicComplianceReinforcement.aln";
+}
+
+network_segmentation {
+    segments: [
+        "audit-vms",
+        "contract-repos",
+        "legal-db",
+        "SIEM-logging",
+        "admin-access"
+    ];
+    isolation_policy: {
+        type: "air-gap";
+        external_access: "None";
+    }
+}
+
+access_control {
+    allowed_protocols: [
+        "SSH (from admin workstation only, via bastion)",
+        "HTTPS (for SIEM log forwarding only)",
+        "LDAPS (internal directory queries)"
+    ];
+    block_all_other_traffic: true;
+}
+
+admin_security {
+    mfa_required: true;
+    allowed_source_ips: [
+        "10.41.96.0/24",    # Admin Workstation Subnet
+        "172.22.88.16"      # SIEM Central Node
+    ];
+    remote_console: "Disabled";
+    direct ESXi host access: "Blocked";
+}
+
+logging {
+    log_level: "Full";
+    log_destination: "SIEM.central-node.security";
+    retention_days: 365;
+    integrity_monitor: true;
+}
+
+threat_prevention {
+    ransomware_detection: true;
+    signature_update_schedule: "Daily";
+    quarantine_on_detect: true;
+    alert: [
+        "security@phoenixfuture.org"
+    ];
+}
+
+compliance_monitoring {
+    control_check_frequency: "Hourly";
+    integrated_with: [
+        "/infrastructure/security/compliance/PhoenixFutureBlueprint_StrategicComplianceReinforcement.aln"
+    ];
+}
+
+#
+# End of .zeta File
+#
